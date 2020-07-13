@@ -59,6 +59,16 @@ unsigned int Shader::CreateShader(const std::string& vertexShader, const std::st
     glAttachShader(program, vs);
     glAttachShader(program, fs);
     glLinkProgram(program);
+	GLint result;
+	glGetProgramiv(program, GL_LINK_STATUS, &result);
+	if(!result)
+	{
+		GLchar infoLog[512];
+		GLint size;
+		glGetProgramInfoLog(program, 512, &size, infoLog);
+		std::cout << "Linking Failed\n";
+		std::cout << infoLog << std::endl;
+	}
     glValidateProgram(program);
 
     glDeleteShader(vs);
@@ -127,4 +137,14 @@ int Shader::GetUniformLocation(const std::string& name)
 	m_UniformLocationCache[name] = location;
 
 	return location; 
+}
+
+void Shader::SetUniform1f(const std::string& name, float value)
+{
+	glUniform1f(GetUniformLocation(name), value);
+}
+
+void Shader::SetUniform1i(const std::string& name, int value)
+{
+	glUniform1i(GetUniformLocation(name), value);
 }

@@ -5,6 +5,9 @@
 #include "VertexArray.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
+#include "Renderer.h"
+#include "Texture.h"
+
 
 int main()
 {
@@ -40,54 +43,43 @@ int main()
         	2, 3, 0
     	};
 
-    	float positions[8] = {
-        	-0.5f, -0.5f,
-         	 0.5f, -0.5f,
-         	 0.5f,  0.5f,
-        	-0.5f,  0.5f
+    	float positions[16] = {
+        	-0.5f, -0.5f, 0.0f, 0.0f,
+         	 0.5f, -0.5f, 1.0f, 0.0f,
+         	 0.5f,  0.5f, 1.0f, 1.0f,
+        	-0.5f,  0.5f, 0.0f, 1.0f
     	};
 
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		VertexArray va;
-		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+		VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 
 		VertexBufferLayout layout;
+		layout.Push<float>(2);
 		layout.Push<float>(2);
 
 		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices, 6);
 
-    	std::string vertexShader =
-    	"#version 330 core\n"
-    	"\n"
-    	"layout(location = 0) in vec4 position;\n"
-    	"\n"
-    	"void main()\n"
-    	"{\n"
-    	"   gl_Position = position;\n"
-    	"}\n";
-
-    	std::string fragmentShader =
-    	"#version 330 core\n"
-    	"\n"
-    	"layout(location = 0) out vec4 color;\n"
-    	"\n"
-    	"uniform vec4 u_Color;\n"
-    	"\n"
-    	"void main()\n"
-    	"{\n"
-    	"   color = u_Color;\n"
-    	"}\n";
-
 		Shader shader("shaders/Basic.shader");
 		shader.Bind();
 
 		shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
 
+		Texture texture("textures/logo.png");
+		texture.Bind();
+		//shader.SetUniform1i("u_Texture", 0);
+
+
 		va.UnBind();
     	shader.Unbind();
 		vb.UnBind();
 		ib.UnBind();
+
+		Renderer renderer;
 
     	float r = 0.0f;
     	float increment = 0.05f;
@@ -96,15 +88,12 @@ int main()
     	while (!glfwWindowShouldClose(window))
     	{
         	/* Render here */
-        	glClear(GL_COLOR_BUFFER_BIT);
+			renderer.Clear();
 
         	shader.Bind();
 			shader.SetUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
 
-			va.Bind();
-			ib.Bind();
-
-        	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        	renderer.Draw(va, ib, shader);
 
         	if(r > 1.0f)
             	increment = -0.05f;
